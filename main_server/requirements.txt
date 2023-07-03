@@ -1,2 +1,4 @@
 websockets
 GPIO
+mpu6050-raspberrypi
+python3-smbus
