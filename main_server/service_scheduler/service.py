@@ -13,6 +13,7 @@ from ad_types.packets import ADPacket
 
 from logger.logger import logging
 
+
 class ADServiceTemplate:
     def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None] = None) -> None:
         """
@@ -41,7 +42,8 @@ class ADServiceWrapper:
         filename: str = os.path.basename(service_filepath)
         service_name, _ = os.path.splitext(filename)
         try:
-            spec = importlib.util.spec_from_file_location(service_name, service_filepath)
+            spec = importlib.util.spec_from_file_location(
+                service_name, service_filepath)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             self.service: ADServiceTemplate = module.Service()
@@ -64,20 +66,23 @@ class ADServiceWrapper:
 
     def __on_event_callable_wrapper(self, values: dict) -> None:
         logging.debug(f"service {self.name} posts {values}")
-        asyncio.run(self.broadcast(ADPacket("notify_values", service=self.name, values=values)))
+        asyncio.run(self.broadcast(
+            ADPacket("notify_values", service=self.name, values=values)))
 
     async def subscribe(self, client) -> bool:
         if client not in self.clients:
             if len(self.clients) == 0:
                 logging.info(f"Setting up service {self.name}")
-                self.service.setup(self.configuration, self.__on_event_callable_wrapper)
+                self.service.setup(self.configuration,
+                                   self.__on_event_callable_wrapper)
             self.clients.append(client)
             await client.subscribe(self)
             return True
         else:
-            logging.warning(f"{client} is already subscribed to service {self.name}")
+            logging.warning(
+                f"{client} is already subscribed to service {self.name}")
             return False
-            
+
     async def unsubscribe(self, client) -> bool:
         try:
             self.clients.remove(client)
@@ -86,6 +91,6 @@ class ADServiceWrapper:
                 self.service.cleanup()
             return True
         except:
-            logging.warning(f"{client} is not subscribed to service {self.name} but tried to unsubscribe")
+            logging.warning(
+                f"{client} is not subscribed to service {self.name} but tried to unsubscribe")
             return False
-            

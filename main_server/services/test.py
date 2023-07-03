@@ -15,14 +15,14 @@ from logger.logger import logging
 
 import threading
 
+
 class Service:
     def loop(self):
         self.running = True
         while self.running:
             time.sleep(1)
             self.callable({"cm": 35})
-            
-    
+
     def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None] = None) -> None:
         """
         Function called the first time the service is loaded

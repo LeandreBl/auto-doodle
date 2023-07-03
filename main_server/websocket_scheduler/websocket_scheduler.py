@@ -15,6 +15,7 @@ from ad_types.packets import ADPacket
 from .client import ADClient
 from service_scheduler.service_scheduler import ADServiceScheduler
 
+
 class WebsocketScheduler:
     """Websocket scheduler to parse packets and commands
     """
@@ -35,7 +36,8 @@ class WebsocketScheduler:
 
     async def __on_subscribe(self, client: ADClient, packet: ADPacket) -> None:
         if not "service_name" in packet:
-            logging.warning(f"client {client} missing \"service_name\" key in subscribe packet")
+            logging.warning(
+                f"client {client} missing \"service_name\" key in subscribe packet")
             await client.send(ADPacket("subscribe", error=f"missing \"service_name\" key in packet"))
             return
 
@@ -47,7 +49,8 @@ class WebsocketScheduler:
 
     async def __on_unsubscribe(self, client: ADClient, packet: ADPacket) -> None:
         if not "service_name" in packet:
-            logging.warning(f"client {client} missing \"service_name\" key in subscribe packet")
+            logging.warning(
+                f"client {client} missing \"service_name\" key in subscribe packet")
             await client.send(ADPacket("subscribe", error=f"missing \"service_name\" key in packet"))
             return
 
