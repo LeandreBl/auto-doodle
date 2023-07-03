@@ -41,7 +41,7 @@ class WebsocketScheduler:
 
         service_name: str = packet["service_name"]
         if not await self.service_scheduler.subscribe(service_name, client):
-            await client.send(ADPacket("subscribe", error=f"already subscribed to service {service_name}"))
+            await client.send(ADPacket("subscribe", error=f"fail to subscribe to service {service_name}"))
         else:
             await client.send(ADPacket("subscribe", message=f"successfully subscribed to service {service_name}"))
 
@@ -53,7 +53,7 @@ class WebsocketScheduler:
 
         service_name: str = packet["service_name"]
         if not await self.service_scheduler.unsubscribe(service_name, client):
-            await client.send(ADPacket("subscribe", error=f"you are not subscribed to service {service_name}"))
+            await client.send(ADPacket("subscribe", error=f"failed to unsubscribed from service {service_name}"))
         else:
             await client.send(ADPacket("subscribe", message=f"successfully unsubscribed from service {service_name}"))
 

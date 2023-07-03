@@ -28,6 +28,7 @@ class ADServiceScheduler:
                 logging.info(f"Cleaning up service {name}")
                 service.service.cleanup()
         self.services = []
+        logging.info("Successfully cleaned up all services")
 
     async def subscribe(self, service_name: str, client: ADClient) -> bool:
         if service_name not in self.services:
@@ -35,14 +36,19 @@ class ADServiceScheduler:
                 f"Client {client} tried to subscribe to non existing service {service_name}")
             return False
         logging.info(f"{client} subscribes to {service_name}")
-        await self.services[service_name].subscribe(client)
-        return True
+        if not await self.services[service_name].subscribe(client):
+            return False
+        else:
+            logging.info(f"{client} subscribed to {service_name}")
+            return True
 
     async def unsubscribe(self, service_name: str, client: ADClient) -> bool:
         if service_name not in self.services:
             logging.warning(
                 f"Client {client} tried to unsubscribe to non existing service {service_name}")
             return False
-        logging.info(f"{client} unsubscribes from {service_name}")
-        await self.services[service_name].unsubscribe(client)
-        return True
+        if not await self.services[service_name].unsubscribe(client):
+            return False
+        else:
+            logging.info(f"{client} unsubscribed from {service_name}")
+            return True
