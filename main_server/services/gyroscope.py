@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, TextIO
 
 from ad_types.configuration import ADConfiguration
 
@@ -30,7 +30,7 @@ class Service:
             self.notify({"ax": ax_ms, "ay": ay_ms, "az": az_ms, "unit": "m/s"})
             """Send the sensor values to the subscribed clients"""
 
-    def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None] = None) -> None:
+    def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None], log_file: TextIO) -> None:
         """
         Function called the first time the service is loaded
         the passed callable_async_get is a function that should be called whenever new values are ready

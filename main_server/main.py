@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import argparse
+import os
 
 from logger.logger import setupLogger, logging
 
@@ -32,7 +33,7 @@ def main(argv: list[str]) -> int:
 
     main_ad_configuration.load_from_blob_of_args(**parser_members)
 
-    if not setupLogger(main_ad_configuration.logging_level, main_ad_configuration.logging_filename):
+    if not setupLogger(main_ad_configuration.logging_level, os.path.join(main_ad_configuration.logging_directory, main_ad_configuration.logging_filename)):
         return 1
 
     logging.info(f"Starting Auto-Doodle v{VERSION}")

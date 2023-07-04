@@ -226,13 +226,13 @@ cd $SCRIPT_DIRECTORY
 #======================================================================================================#
 separating_banner "MJPG Streamer"
 #------------------------------------------------------------------------------------------------------#
-MJPG_DIRECTORY=mjpg-streamer
+MJPG_DIRECTORY=`realpath mjpg-streamer`
 if [[ ! -d $MJPG_DIRECTORY ]]; then
     try "Cloning repository" git clone https://github.com/LMBernardo/mjpg-streamer.git $MJPG_DIRECTORY
 fi
 cd $MJPG_DIRECTORY/mjpg-streamer-experimental
-try "Creating build directory" mkdir -p build
-cd build
+try "Creating build directory" mkdir -p _build
+cd _build
 try "Setting up cmake" cmake -DENABLE_HTTP_MANAGEMENT=ON ..
 try "Building mjpg-streamer" make -j $HOST_CORES
 try "Installing mjpg-streamer" sudo make install

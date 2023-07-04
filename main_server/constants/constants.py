@@ -9,5 +9,8 @@ DEFAULT_SERVICES_DIRECTORY_PATH: str = "./services"
 DEFAULT_LOGGING_LEVEL: str = "INFO"
 """Default logging level for the whole process"""
 
-DEFAULT_LOGGING_FILENAME: str = "./logs/auto-doodle.log"
-"""Default logginge filename"""
+DEFAULT_LOGGING_FILENAME: str = "auto-doodle.log"
+"""Default logging filename"""
+
+DEFAULT_LOGGING_DIRECTORY: str = "./logs"
+"""Default logging directory"""

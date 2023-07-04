@@ -22,6 +22,8 @@ class WebsocketScheduler:
     """
 
     def __init__(self, configuration: ADConfiguration) -> None:
+        self.sigint_count: int = 0
+        
         self.server = websockets.serve(
             self.__on_connect, "localhost", configuration.websocket_scheduler_port, logger=logging.getLogger())
 
@@ -98,6 +100,9 @@ class WebsocketScheduler:
         await self.__event_loop(client)
 
     def __on_sigint_wrapper_async(self, sig):
+        self.sigint_count += 1
+        if self.sigint_count > 1:
+            exit(1)
         logging.info(
             f'Scheduler received signal [{signal.strsignal(sig)}] signal, stopping the daemon...')
         self.stop()
@@ -121,5 +126,5 @@ class WebsocketScheduler:
                  asyncio.tasks.Task.current_task()]
         if len(tasks):
             logging.warning(
-                f"Stopping scheduler with {tasks} running background tasks")
+                f"Stopping scheduler with {len(tasks)} running background tasks")
         asyncio.get_event_loop().stop()

@@ -52,6 +52,9 @@ class ADClient:
         except websockets.exceptions.ConnectionClosed:
             await self.close()
             return None
+        except websockets.exceptions.ConnectionClosedOK:
+            await self.close()
+            return None
         try:
             return ADPacket(frame)
         except Exception as e:

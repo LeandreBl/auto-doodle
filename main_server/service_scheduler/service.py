@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 
-from typing import Callable
 import asyncio
 import os
 import importlib.util
+from typing import Callable, TextIO
+import datetime
 
 from ad_types.configuration import ADConfiguration
 from ad_types.packets import ADPacket
@@ -15,7 +16,7 @@ from logger.logger import logging
 
 
 class ADServiceTemplate:
-    def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None] = None) -> None:
+    def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None], log_file: TextIO) -> None:
         """
         Function called the first time the service is loaded
         the passed callable_async_get is a function that should be called whenever new values are ready
@@ -47,7 +48,8 @@ class ADServiceWrapper:
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             self.service: ADServiceTemplate = module.Service()
-            logging.info(f"Successfully loaded <{service_name}> service at \"{realpath}\"")
+            self.logging_file: TextIO = open(os.path.join(configuration.logging_directory, f'{service_name}.log'), 'a')
+            logging.info(f"Successfully loaded <{service_name}> service at \"{realpath}\" with logfile at \"{self.logging_file.name}\"")
         except Exception as e:
             self.service = None
             logging.critical(f"Failed to load <{service_name}> service at \"{realpath}\" ({e})")
@@ -75,8 +77,10 @@ class ADServiceWrapper:
         if client not in self.clients:
             if len(self.clients) == 0:
                 logging.info(f"Setting up service <{self.name}>")
+                now: datetime.datetime = datetime.datetime.now()
+                print(f'[{now.strftime("%Y-%m-%d %H:%M:%S")}] <{self.name}> service started', file=self.logging_file, flush=True)
                 self.service.setup(self.configuration,
-                                   self.__on_event_callable_wrapper)
+                                   self.__on_event_callable_wrapper, self.logging_file)
             self.clients.append(client)
             await client.subscribe(self)
             return True

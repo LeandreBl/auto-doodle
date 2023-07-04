@@ -2,42 +2,36 @@
 
 from __future__ import annotations
 
+import signal
+import datetime
 from typing import Callable, TextIO
+import subprocess
 import os
-import importlib.util
-import time
 
 from ad_types.configuration import ADConfiguration
 
-from websocket_scheduler.client import ADClient
-
 from logger.logger import logging
 
-import threading
-
-
 class Service:
-    def loop(self):
-        self.running = True
-        while self.running:
-            time.sleep(1)
-            self.callable({"cm": 35})
-
     def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None], log_file: TextIO) -> None:
         """
         Function called the first time the service is loaded
         the passed callable_async_get is a function that should be called whenever new values are ready
         """
-        self.callable = callable_async_get
-        self.thread = threading.Thread(target=self.loop)
-        self.thread.start()
+        command: list[str] = ["mjpg_streamer", "-o", "output_http.so -w ./www", "-i", "input_http.so"]
+        env = os.environ.copy()
+        env["LD_PRELOAD"] = "/usr/local/lib/mjpg-streamer"
+        try:
+            self.process = subprocess.Popen(command, env=env, shell=True, stderr=log_file, stdout=log_file)
+        except Exception as e:
+            logging.critical(f'Failed to start camera streaming daemon: {e}')
 
     def cleanup(self) -> None:
         """
         Function called when the service is unloaded
         """
-        self.running = False
-        self.thread.join()
+        self.process.send_signal(signal.SIGINT)
+        self.process.wait()
 
     def post(self, values: dict) -> None:
         """

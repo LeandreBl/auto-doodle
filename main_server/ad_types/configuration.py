@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from constants.constants import DEFAULT_WEBSOCKET_PORT, DEFAULT_SERVICES_DIRECTORY_PATH, DEFAULT_LOGGING_LEVEL, DEFAULT_LOGGING_FILENAME
+from constants.constants import DEFAULT_WEBSOCKET_PORT, DEFAULT_SERVICES_DIRECTORY_PATH, DEFAULT_LOGGING_LEVEL, DEFAULT_LOGGING_FILENAME, DEFAULT_LOGGING_DIRECTORY
 from utils import utils
 
 
@@ -19,6 +19,9 @@ class ADConfiguration:
 
     logging_level: str = DEFAULT_LOGGING_LEVEL
     """Logging level of the process"""
+
+    logging_directory: str =DEFAULT_LOGGING_DIRECTORY 
+    """Logging directory in which logs are stored"""
 
     logging_filename: str = DEFAULT_LOGGING_FILENAME
     """Logging filename in which logs are stored"""
