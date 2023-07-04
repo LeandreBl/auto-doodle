@@ -14,12 +14,13 @@ class ADClient:
         self.websocket = websocket
         self.subscribed_services: list[ADServiceWrapper] = []
         self.connected = True
+        self.username = "anonymous"
 
     def __del__(self) -> None:
         self.close()
 
     def __repr__(self) -> str:
-        return f'{self.websocket.host}:{self.websocket.port} -- services: {self.subscribed_services}'
+        return f'{self.username}@{self.websocket.host}:{self.websocket.port}'
 
     async def unsubscribe(self, service: ADServiceWrapper) -> bool:
         try:
@@ -53,8 +54,8 @@ class ADClient:
             return None
         try:
             return ADPacket(frame)
-        except:
-            logging.warning(f"Invalid ADPacket format: {frame}")
+        except Exception as e:
+            logging.warning(f"Invalid ADPacket format: {frame} ({e})")
             await self.close()
             return None
 

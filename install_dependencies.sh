@@ -183,14 +183,16 @@ else
 fi
 
 USER_HOME=/home/$SUDO_USER
-HOST_CORES=`grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}'`
+HOST_CORES=`grep ^cpu\ cores /proc/cpuinfo | uniq |  awk '{print $4}'`
 if [[ `hostname` == "raspberry" ]]; then
     IS_RASPI=true
 else
     IS_RASPI=false
 fi
 
+#======================================================================================================#
 separating_banner "Pre setup"
+#------------------------------------------------------------------------------------------------------#
 try "Updating apt" sudo $APT_COMMAND update
 try "Upgrading apt" sudo $APT_COMMAND upgrade -y
 if [[ $IS_RASPI == true ]]; then
@@ -199,11 +201,15 @@ else
     log "Skipping raspi-update, this machine is not a Raspberry Pi"
 fi
 
+#======================================================================================================#
 separating_banner "Startup dependencies"
+#------------------------------------------------------------------------------------------------------#
 try "Updating apt" sudo $APT_COMMAND update
-try "Installing dependencies" sudo $APT_COMMAND install -y python3 libusb-1.0.0-dev libssl-dev cmake libprotobuf-dev protobuf-c-compiler protobuf-compiler libqt5multimedia5 libqt5multimedia5-plugins libqt5multimediawidgets5 qtmultimedia5-dev libqt5bluetooth5 libqt5bluetooth5-bin qtconnectivity5-dev pulseaudio librtaudio-dev
+try "Installing dependencies" sudo $APT_COMMAND install -y libjpeg8-dev python3 libusb-1.0.0-dev libssl-dev cmake libprotobuf-dev protobuf-c-compiler protobuf-compiler libqt5multimedia5 libqt5multimedia5-plugins libqt5multimediawidgets5 qtmultimedia5-dev libqt5bluetooth5 libqt5bluetooth5-bin qtconnectivity5-dev pulseaudio librtaudio-dev
 
+#======================================================================================================#
 separating_banner "Boost 1.66"
+#------------------------------------------------------------------------------------------------------#
 BOOST_ARCHIVE=boost_1_66_0.tar.bz2
 BOOST_FOLDER=${BOOST_ARCHIVE%%.*}
 if [[ ! -d $BOOST_FOLDER ]]; then
@@ -217,7 +223,24 @@ try "Setting up boost 1.66" ./bootstrap.sh
 try "Installing boost 1.66" ./b2 -q --without-python define=BOOST_LOG_DYN_LIN threading=multi --prefix=/usr install
 cd $SCRIPT_DIRECTORY
 
+#======================================================================================================#
+separating_banner "MJPG Streamer"
+#------------------------------------------------------------------------------------------------------#
+MJPG_DIRECTORY=mjpg-streamer
+if [[ ! -d $MJPG_DIRECTORY ]]; then
+    try "Cloning repository" git clone https://github.com/LMBernardo/mjpg-streamer.git $MJPG_DIRECTORY
+fi
+cd $MJPG_DIRECTORY/mjpg-streamer-experimental
+try "Creating build directory" mkdir -p build
+cd build
+try "Setting up cmake" cmake -DENABLE_HTTP_MANAGEMENT=ON ..
+try "Building mjpg-streamer" make -j $HOST_CORES
+try "Installing mjpg-streamer" sudo make install
+cd $SCRIPT_DIRECTORY
+
+#======================================================================================================#
 separating_banner "Android Auto SDK"
+#------------------------------------------------------------------------------------------------------#
 AASDK_DIRECTORY=aasdk
 if [[ ! -d $AASDK_DIRECTORY ]]; then
     try "Cloning repository" git clone -b master https://github.com/f1xpl/aasdk.git $AASDK_DIRECTORY
@@ -230,7 +253,9 @@ try "Setting up cmake" cmake ..
 try "Building library" cmake --build . --config Release -- -j $HOST_CORES
 cd $SCRIPT_DIRECTORY
 
+#======================================================================================================#
 separating_banner "Ilclient firmware"
+#------------------------------------------------------------------------------------------------------#
 if [[ $IS_RASPI == true ]]; then
     cd /opt/vc/src/hello_pi/libs/ilclient
     make -j $HOST_CORES
@@ -239,7 +264,9 @@ else
     log "Skipping ilclient, this machine is not a Raspberry Pi"
 fi
 
+#======================================================================================================#
 separating_banner "OpenAuto"
+#------------------------------------------------------------------------------------------------------#
 if [[ $IS_RASPI == true ]]; then
     OA_DIRECTORY=openauto
     if [[ ! -d $OA_DIRECTORY ]]; then
@@ -250,20 +277,27 @@ if [[ $IS_RASPI == true ]]; then
     cd build
     try "Setting up cmake" cmake .. -DCMAKE_BUILD_TYPE=Release -DRPI3_BUILD=TRUE -DAASDK_LIB_DIRS="$SCRIPT_DIRECTORY/$AASDK_DIRECTORY/lib" -DAASDK_INCLUDE_DIRS="$SCRIPT_DIRECTORY/$AASDK_DIRECTORY/include" -DAASDK_LIBRARIES="$SCRIPT_DIRECTORY/$AASDK_DIRECTORY/lib/libaasdk.so" -DAASDK_PROTO_INCLUDE_DIRS="$SCRIPT_DIRECTORY/$AASDK_DIRECTORY/build" -DAASDK_PROTO_LIBRARIES="$SCRIPT_DIRECTORY/$AASDK_DIRECTORY/lib/libaasdk_proto.so" -D Protobuf_PROTOC_EXECUTABLE=/usr/bin/protoc -D BOOST_LOG_DYN_LINK=TRUE
     try "Building library" cmake --build . --config Release -- -j $HOST_CORES
+    log "Enabling AutoApp at startup"
+    sudo echo "sudo /home/pi/openauto/bin/autoapp" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+    check_error "Add autoapp to startup" $?
     cd $SCRIPT_DIRECTORY
 else
     log "Skipping OpenAuto, this machine is not a Raspberry Pi"
 fi
 
-separating_banner "Enabling AutoApp at startup"
-sudo echo "sudo /home/pi/openauto/bin/autoapp" >> /home/pi/.config/lxsession/LXDE-pi/autostart
-check_error "Add autoapp to startup" $?
-
+#======================================================================================================#
 separating_banner "Auto-Doodle"
+#------------------------------------------------------------------------------------------------------#
 MAIN_SERVER_DIRECTORY=`realpath main_server`
-try "Installing python dependencies" su - $SUDO_USER pip install -r $MAIN_SERVER_DIRECTORY/requirements.txt
+if [[ $IS_RASPI == true ]]; then
+    try "Installing python dependencies" sudo -u $SUDO_USER pip install -r $MAIN_SERVER_DIRECTORY/requirements.txt
+else
+    log "Skipping Auto-Doodle Python dependencies, this machine is not a Raspberry Pi"
+fi
 
+#======================================================================================================#
 separating_banner "Cleanup"
+#------------------------------------------------------------------------------------------------------#
 try "Reapplying ownership of directories" sudo chown -R $SUDO_USER:$SUDO_USER .
 try "Updating apt" sudo $APT_COMMAND update
 try "Upgrading apt" sudo $APT_COMMAND upgrade -y

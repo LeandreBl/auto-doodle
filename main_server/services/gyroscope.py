@@ -24,7 +24,7 @@ class Service:
         """
         self.running = True
         while self.running:
-            ax_ms, ay_ms, az_ms: float = self.sensor.getAcceleration()
+            ax_ms, ay_ms, az_ms = self.sensor.getAcceleration()
             """Get the acceleration values"""
 
             self.notify({"ax": ax_ms, "ay": ay_ms, "az": az_ms, "unit": "m/s"})

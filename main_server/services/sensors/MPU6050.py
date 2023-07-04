@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import time
+from typing import Tuple
 
 import GPIO
 
@@ -20,10 +20,10 @@ class MPU6050:
     def getTemperatureCelsius(self) -> float:
         return self.sensor.get_temp()
     
-    def getAcceleration(self) -> float, float, float:
+    def getAcceleration(self) -> Tuple[float, float, float]:
         data: dict[str, float] = self.sensor.get_accel_data()
         return data['x'], data['y'], data['z']
     
-    def getGyroscope(self) -> float, float, float:
+    def getGyroscope(self) -> Tuple[float, float, float]:
         data: dict[str, float] = self.sensor.get_gyro_data()
         return data['x'], data['y'], data['z']

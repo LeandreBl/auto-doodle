@@ -19,9 +19,10 @@ class ADPacket:
             if not "event" in packet:
                 raise KeyError('event')
             elif not "payload" in packet:
-                raise KeyError('payload')
+                self.payload = {}
+            else:
+                self.payload = packet["payload"]
             self.event = packet["event"]
-            self.payload = packet["payload"]
         else:
             self.event = event_or_string_packet
             self.payload = {

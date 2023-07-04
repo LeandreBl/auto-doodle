@@ -47,9 +47,10 @@ class ADServiceWrapper:
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             self.service: ADServiceTemplate = module.Service()
-            logging.info(f"{realpath} module loaded successfully")
-        except:
-            logging.exception(f"Failed to load module file {realpath}")
+            logging.info(f"Successfully loaded <{service_name}> service at \"{realpath}\"")
+        except Exception as e:
+            self.service = None
+            logging.critical(f"Failed to load <{service_name}> service at \"{realpath}\" ({e})")
         self.name: str = service_name
         self.clients = []
 
@@ -58,21 +59,22 @@ class ADServiceWrapper:
             self.service.cleanup()
 
     def __repr__(self) -> str:
-        return f'{self.name} - {self.clients}'
+        return f'{self.name}'
 
     async def broadcast(self, packet: ADPacket) -> None:
         for client in self.clients:
             await client.send(packet)
 
     def __on_event_callable_wrapper(self, values: dict) -> None:
-        logging.debug(f"service {self.name} posts {values}")
+        logging.debug(f"Service <{self.name}> posting {values}...")
         asyncio.run(self.broadcast(
             ADPacket("notify_values", service=self.name, values=values)))
+        logging.debug(f"Service <{self.name}> posted {values}")
 
     async def subscribe(self, client) -> bool:
         if client not in self.clients:
             if len(self.clients) == 0:
-                logging.info(f"Setting up service {self.name}")
+                logging.info(f"Setting up service <{self.name}>")
                 self.service.setup(self.configuration,
                                    self.__on_event_callable_wrapper)
             self.clients.append(client)
@@ -80,7 +82,7 @@ class ADServiceWrapper:
             return True
         else:
             logging.warning(
-                f"{client} is already subscribed to service {self.name}")
+                f"{client} is already subscribed to service <{self.name}>")
             return False
 
     async def unsubscribe(self, client) -> bool:
@@ -88,9 +90,10 @@ class ADServiceWrapper:
             self.clients.remove(client)
             await client.unsubscribe(self)
             if len(self.clients) == 0:
+                logging.info(f"Cleaning up service <{self.name}>")
                 self.service.cleanup()
             return True
         except:
             logging.warning(
-                f"{client} is not subscribed to service {self.name} but tried to unsubscribe")
+                f"{client} is not subscribed to service <{self.name}> but tried to unsubscribe")
             return False

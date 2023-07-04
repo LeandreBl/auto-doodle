@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from typing import Callable
-import os
-import importlib.util
 
 from ad_types.configuration import ADConfiguration
 from ad_types.packets import ADPacket
@@ -19,13 +17,16 @@ class ADServiceScheduler:
         files: list[str] = get_matching_filenames_in_directory(
             configuration.services_directory_path, ".py")
         self.services: dict[str, ADServiceWrapper] = {
-            i.name: i for i in map(lambda file: ADServiceWrapper(file, configuration), files)}
+            i.name: i for i in filter(lambda x: x.service != None, map(lambda file: ADServiceWrapper(file, configuration), files))}
+
+    def __repr__(self) -> str:
+        return f"{[*self.services.keys()]}"
 
     def stop(self) -> None:
         logging.info("Cleaning up all services")
         for name, service in self.services.items():
             if len(service.clients) != 0:
-                logging.info(f"Cleaning up service {name}")
+                logging.info(f"Cleaning up service <{name}>")
                 service.service.cleanup()
         self.services = []
         logging.info("Successfully cleaned up all services")
@@ -35,11 +36,11 @@ class ADServiceScheduler:
             logging.warning(
                 f"Client {client} tried to subscribe to non existing service {service_name}")
             return False
-        logging.info(f"{client} subscribes to {service_name}")
+        logging.debug(f"{client} subscribing to <{service_name}> ...")
         if not await self.services[service_name].subscribe(client):
             return False
         else:
-            logging.info(f"{client} subscribed to {service_name}")
+            logging.info(f"{client} subscribed to <{service_name}>")
             return True
 
     async def unsubscribe(self, service_name: str, client: ADClient) -> bool:
@@ -47,8 +48,9 @@ class ADServiceScheduler:
             logging.warning(
                 f"Client {client} tried to unsubscribe to non existing service {service_name}")
             return False
+        logging.debug(f"{client} unsubscribing from <{service_name}> ...")
         if not await self.services[service_name].unsubscribe(client):
             return False
         else:
-            logging.info(f"{client} unsubscribed from {service_name}")
+            logging.info(f"{client} unsubscribed from <{service_name}>")
             return True
