@@ -11,7 +11,7 @@ class ADPacket:
             try:
                 packet = json.loads(event_or_string_packet)
             except:
-                self.event = event_or_string_packet
+                self.event = event_or_string_packet.lower()
                 self.payload = {
                     **kwargs
                 }
@@ -22,9 +22,9 @@ class ADPacket:
                 self.payload = {}
             else:
                 self.payload = packet["payload"]
-            self.event = packet["event"]
+            self.event = packet["event"].lower()
         else:
-            self.event = event_or_string_packet
+            self.event = event_or_string_packet.lower()
             self.payload = {
                 **content,
                 **kwargs

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import functools
 import signal
 
 import websockets
@@ -14,10 +13,12 @@ from logger.logger import logging
 
 from ad_types.packets import ADPacket
 from .client import ADClient
+from .packet_scheduler import PacketScheduler
 from service_scheduler.service_scheduler import ADServiceScheduler
 
+
 class WebsocketScheduler:
-    """Websocket scheduler to parse packets and commands
+    """Websocket scheduler to handle packets and commands
     """
 
     def __init__(self, configuration: ADConfiguration) -> None:
@@ -29,14 +30,16 @@ class WebsocketScheduler:
         self.service_scheduler: ADServiceScheduler = ADServiceScheduler(
             configuration)
 
-        logging.info(f"Scheduler started with {self.service_scheduler} service(s)")
+        logging.info(
+            f"Scheduler started with {self.service_scheduler} service(s)")
 
-        self.on_events: dict[str, callable] = {
-            "subscribe": self.__on_subscribe,
-            "unsubscribe": self.__on_unsubscribe,
-            "get_subscriptions": self.__on_get_subscriptions,
-            "set_username": self.__on_set_username,
-        }
+        self.packet_scheduler: PacketScheduler = PacketScheduler()
+
+        self.packet_scheduler.on("subscribe", self.__on_subscribe)
+        self.packet_scheduler.on("unsubscribe", self.__on_unsubscribe)
+        self.packet_scheduler.on(
+            "get_subscriptions", self.__on_get_subscriptions)
+        self.packet_scheduler.on("set_username", self.__on_set_username)
 
     async def __on_set_username(self, client: ADClient, packet: ADPacket) -> None:
         try:
@@ -45,7 +48,6 @@ class WebsocketScheduler:
             await client.send(ADPacket('set_username', message=f"username changed to '{username}'"))
         except:
             await client.send(ADPacket('set_username', error="missing field 'username'"))
-        
 
     async def __on_get_subscriptions(self, client: ADClient, packet: ADPacket) -> None:
         await client.send(ADPacket('get_subscriptions', subscriptions=[service.name for service in client.subscribed_services]))
@@ -85,13 +87,8 @@ class WebsocketScheduler:
             packet: ADPacket = await client.receive()
             if packet == None:
                 continue
-            await self.__on_message(client, packet)
+            await self.packet_scheduler.trigger(client, packet)
         await self.__on_disconnect(client)
-
-    async def __on_message(self, client: ADClient, packet: ADPacket):
-        event: str = packet.event.lower()
-        if event in self.on_events:
-            await self.on_events[event](client, packet)
 
     async def __on_disconnect(self, client: ADClient):
         await client.close()
@@ -101,13 +98,15 @@ class WebsocketScheduler:
         await self.__event_loop(client)
 
     def __on_sigint_wrapper_async(self, sig):
-        logging.info(f'Scheduler received signal [{signal.strsignal(sig)}] signal, stopping the daemon...')
+        logging.info(
+            f'Scheduler received signal [{signal.strsignal(sig)}] signal, stopping the daemon...')
         self.stop()
 
     def start(self) -> None:
         logging.info("Websocket scheduler started")
         asyncio.get_event_loop().run_until_complete(self.server)
-        asyncio.get_event_loop().add_signal_handler(signal.SIGINT, lambda: self.__on_sigint_wrapper_async(signal.SIGINT))
+        asyncio.get_event_loop().add_signal_handler(
+            signal.SIGINT, lambda: self.__on_sigint_wrapper_async(signal.SIGINT))
         try:
             asyncio.get_event_loop().run_forever()
         except TypeError as e:
@@ -119,7 +118,8 @@ class WebsocketScheduler:
 
     def stop(self) -> None:
         tasks = [task for task in asyncio.Task.all_tasks() if task is not
-             asyncio.tasks.Task.current_task()]
+                 asyncio.tasks.Task.current_task()]
         if len(tasks):
-            logging.warning(f"Stopping scheduler with {tasks} running background tasks")
+            logging.warning(
+                f"Stopping scheduler with {tasks} running background tasks")
         asyncio.get_event_loop().stop()
