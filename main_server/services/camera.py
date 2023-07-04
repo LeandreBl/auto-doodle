@@ -18,11 +18,18 @@ class Service:
         Function called the first time the service is loaded
         the passed callable_async_get is a function that should be called whenever new values are ready
         """
-        command: list[str] = ["mjpg_streamer", "-o", "output_http.so -w ./www", "-i", "input_http.so"]
+        self.log_file: TextIO = log_file
+
+        self.command: list[str] = ["mjpg_streamer", "-o", "'output_http.so -w ./www'", "-i", "'input_raspicam.so -x 1920 -y 1080 -fps 30'", "&"]
+
         env = os.environ.copy()
-        env["LD_PRELOAD"] = "/usr/local/lib/mjpg-streamer"
+        env["LD_LIBRARY_PATH"] = "/usr/local/lib/mjpg-streamer"
+
+        print(f'Starting {self.command[0]} as \"{" ".join(self.command)}\"', file=log_file, flush=True)
+
         try:
-            self.process = subprocess.Popen(command, env=env, shell=True, stderr=log_file, stdout=log_file)
+            self.process = subprocess.Popen(self.command, env=env, shell=True, stderr=log_file, stdout=log_file)
+            print(f"Process {self.process.pid} started", file=self.log_file, flush=True)
         except Exception as e:
             logging.critical(f'Failed to start camera streaming daemon: {e}')
 
@@ -30,8 +37,18 @@ class Service:
         """
         Function called when the service is unloaded
         """
+
+        print(f"Stopping process {self.process.pid}", file=self.log_file, flush=True)
         self.process.send_signal(signal.SIGINT)
-        self.process.wait()
+        try:
+            ret: int = self.process.wait(0.5)
+            print(f"Process {self.process.pid} exited with exit code {ret}", file=self.log_file, flush=True)
+        except:
+            print(f"Process {self.process.pid} takes too long to exit, sending SIGKILL", file=self.log_file, flush=True)
+            self.process.kill()
+            self.process.wait()
+            os.system(f'pkill {self.command[0]}')
+            print(f"Process {self.process.pid} killed successfully", file=self.log_file, flush=True)
 
     def post(self, values: dict) -> None:
         """
