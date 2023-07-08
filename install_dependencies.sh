@@ -210,7 +210,7 @@ HOST_CORES=`lscpu | grep 'CPU(s):' | awk '{print $2}'`
 #======================================================================================================#
 separating_banner "Pre setup"
 try "Updating PKG" pkg update
-try "Installing packages" pkg install curl git openssh zsh python3
+try "Installing packages" pkg install -y curl git openssh zsh python3 cmake
 try "Upgrading PKG" pkg upgrade
 #------------------------------------------------------------------------------------------------------#
 
@@ -229,19 +229,15 @@ cd $MJPG_DIRECTORY/mjpg-streamer-experimental
 try "Creating build directory" mkdir -p _build
 cd _build
 try "Setting up cmake" cmake -DENABLE_HTTP_MANAGEMENT=ON ..
-try "Building mjpg-streamer" make -j $HOST_CORES
-try "Installing mjpg-streamer" make install
+#try "Building mjpg-streamer" make -j $HOST_CORES
+#try "Installing mjpg-streamer" make install
 cd $SCRIPT_DIRECTORY
 
 #======================================================================================================#
 separating_banner "Auto-Doodle main server"
 #------------------------------------------------------------------------------------------------------#
 MAIN_SERVER_DIRECTORY=`realpath main_server`
-if [[ $IS_RASPI == true ]]; then
-    try "Installing python dependencies" $SUDO_USER pip install -r $MAIN_SERVER_DIRECTORY/requirements.txt
-else
-    log "Skipping Auto-Doodle Python dependencies, this machine is not a Raspberry Pi"
-fi
+try "Installing python dependencies" pip install -r $MAIN_SERVER_DIRECTORY/requirements.txt
 
 #======================================================================================================#
 separating_banner "Cleanup"
