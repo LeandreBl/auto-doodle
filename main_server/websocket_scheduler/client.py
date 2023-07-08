@@ -63,4 +63,11 @@ class ADClient:
             return None
 
     async def send(self, packet: ADPacket) -> None:
-        await self.websocket.send(str(packet))
+        try:
+            await self.websocket.send(str(packet))
+        except websockets.exceptions.ConnectionClosed:
+            await self.close()
+            return None
+        except websockets.exceptions.ConnectionClosedOK:
+            await self.close()
+            return None
