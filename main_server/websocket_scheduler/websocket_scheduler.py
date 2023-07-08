@@ -122,9 +122,4 @@ class WebsocketScheduler:
         self.service_scheduler.stop()
 
     def stop(self) -> None:
-        tasks = [task for task in asyncio.Task.all_tasks() if task is not
-                 asyncio.tasks.Task.current_task()]
-        if len(tasks):
-            logging.warning(
-                f"Stopping scheduler with {len(tasks)} running background tasks")
         asyncio.get_event_loop().stop()
