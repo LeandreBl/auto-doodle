@@ -234,7 +234,7 @@ try "Installing mjpg-streamer" make install
 cd $SCRIPT_DIRECTORY
 
 #======================================================================================================#
-separating_banner "Auto-Doodle"
+separating_banner "Auto-Doodle main server"
 #------------------------------------------------------------------------------------------------------#
 MAIN_SERVER_DIRECTORY=`realpath main_server`
 if [[ $IS_RASPI == true ]]; then
