@@ -23,7 +23,7 @@ class Service:
             time.sleep(1)
             self.callable({"cm": 35})
 
-    def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None], log_file: TextIO) -> None:
+    def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None], log_file: TextIO) -> bool:
         """
         Function called the first time the service is loaded
         the passed callable_async_get is a function that should be called whenever new values are ready
@@ -31,6 +31,7 @@ class Service:
         self.callable = callable_async_get
         self.thread = threading.Thread(target=self.loop)
         self.thread.start()
+        return True
 
     def cleanup(self) -> None:
         """

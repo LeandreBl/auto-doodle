@@ -31,6 +31,7 @@ class Service:
         self.callable = callable_async_get
         self.thread = threading.Thread(target=self.loop)
         self.thread.start()
+        return True
 
     def cleanup(self) -> None:
         """

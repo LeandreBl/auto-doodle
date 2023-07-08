@@ -79,8 +79,11 @@ class ADServiceWrapper:
                 logging.info(f"Setting up service <{self.name}>")
                 now: datetime.datetime = datetime.datetime.now()
                 print(f'[{now.strftime("%Y-%m-%d %H:%M:%S")}] <{self.name}> service started', file=self.logging_file, flush=True)
-                self.service.setup(self.configuration,
+                status: bool = self.service.setup(self.configuration,
                                    self.__on_event_callable_wrapper, self.logging_file)
+                if status == False:
+                    logging.critical(f'Could not setup service <{self.name}>')
+                    return False
             self.clients.append(client)
             await client.subscribe(self)
             return True
