@@ -7,25 +7,35 @@ import time
 
 from ad_types.configuration import ADConfiguration
 
+from websocket_scheduler.client import ADClient
+
 from logger.logger import logging
 
 import threading
 
+TEMPERATURE_SYSFILE: str = "/sys/class/thermal/thermal_zone0/temp"
 
 class Service:
-    def loop(self):
+    def worker(self):
         self.running = True
         while self.running:
+            try:
+                with open(TEMPERATURE_SYSFILE, 'r') as sysfile:
+                    ascii_temp: str = sysfile.readline()
+                    temp: float = float(ascii_temp) / 1000.0
+                    self.callable({"temperature": temp, "unit": "°C"})
+            except Exception as e:
+                logging.critical(f"Failed to retrieve temperature from {TEMPERATURE_SYSFILE}: {e}")
             time.sleep(1)
-            self.callable({"cm": 35})
 
     def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None], log_file: TextIO) -> bool:
         """
         Function called the first time the service is loaded
         the passed callable_async_get is a function that should be called whenever new values are ready
         """
+        self.log_file = log_file
         self.callable = callable_async_get
-        self.thread = threading.Thread(target=self.loop)
+        self.thread = threading.Thread(target=self.worker)
         self.thread.start()
         return True
 
