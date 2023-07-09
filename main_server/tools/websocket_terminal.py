@@ -19,8 +19,8 @@ except:
 atexit.register(readline.write_history_file, ".history")
 
 
-async def test(port: int):
-    async with websockets.connect(f'ws://localhost:{port}') as websocket:
+async def test(addr: str, port: int):
+    async with websockets.connect(f'ws://{addr}:{port}') as websocket:
         while True:
             try:
                 line = input("> ")
@@ -35,9 +35,10 @@ async def test(port: int):
 
 
 def main(argv: list[str]) -> int:
-    port: int = int(argv[1]) if len(argv) > 1 else 8000
+    addr: str = argv[1] if len(argv) > 1 else "localhost"
+    port: int = int(argv[2]) if len(argv) > 2 else 8000
 
-    asyncio.get_event_loop().run_until_complete(test(port))
+    asyncio.get_event_loop().run_until_complete(test(addr, port))
 
 
 if __name__ == '__main__':
