@@ -53,6 +53,7 @@ class ADServiceWrapper:
         except Exception as e:
             self.service = None
             logging.critical(f"Failed to load <{service_name}> service at \"{realpath}\" ({e})")
+        self.runner_loop = asyncio.get_event_loop()
         self.name: str = service_name
         self.clients = []
 
@@ -69,7 +70,7 @@ class ADServiceWrapper:
 
     def __on_event_callable_wrapper(self, values: dict) -> None:
         logging.debug(f"Service <{self.name}> posting {values}...")
-        asyncio.run(self.broadcast(
+        task = self.runner_loop.create_task(self.broadcast(
             ADPacket("notify_values", service=self.name, values=values)))
         logging.debug(f"Service <{self.name}> posted {values}")
 

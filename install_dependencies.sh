@@ -210,7 +210,7 @@ HOST_CORES=`lscpu | grep 'CPU(s):' | awk '{print $2}'`
 #======================================================================================================#
 separating_banner "Pre setup"
 try "Updating PKG" pkg update
-try "Installing packages" pkg install -y curl git openssh zsh python3 cmake
+try "Installing packages" pkg install -y curl git openssh zsh python3 cmake binutils
 try "Upgrading PKG" pkg upgrade
 #------------------------------------------------------------------------------------------------------#
 
@@ -237,7 +237,8 @@ cd $SCRIPT_DIRECTORY
 separating_banner "Auto-Doodle main server"
 #------------------------------------------------------------------------------------------------------#
 MAIN_SERVER_DIRECTORY=`realpath main_server`
-try "Installing python dependencies" pip install -r $MAIN_SERVER_DIRECTORY/requirements.txt
+try "Installing python dependencies" python3 -m pip install -r $MAIN_SERVER_DIRECTORY/requirements.txt
+try "Moving GPIO package to current directory" ln -sr ~/../usr/lib/python3.11/site-packages/gpio/ $MAIN_SERVER_DIRECTORY/GPIO
 
 #======================================================================================================#
 separating_banner "Cleanup"
