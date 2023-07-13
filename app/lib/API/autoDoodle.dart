@@ -10,7 +10,11 @@ class AutoDoodleAPI {
   AutoDoodleAPI({String this.uri = 'ws://$DEFAULT_URL:$DEFAULT_PORT'}) {}
 
   void connect({void Function()? onConnect, void Function()? onDisconnect}) {
-    ws = IO.io(uri);
+    ws = IO.io(
+        uri,
+        IO.OptionBuilder()
+            .setTransports(['websocket'])
+            .build());
     ws.onConnect((_) {
       if (onConnect != null) {
         onConnect();

@@ -17,8 +17,7 @@ class _BackSensorState extends State<BackSensor> {
   void initState() {
     super.initState();
     api.connect(onConnect: () {
-      Logging.debug("connected");
-      api.subscribe("back_distance_service");
+      api.subscribe("back_distance_sensor");
     });
     api.on("notify_values", (dynamic data) {
       if (data["service"] == "back_distance_sensor") {
