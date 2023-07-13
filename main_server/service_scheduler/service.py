@@ -41,6 +41,7 @@ class ADServiceWrapper:
         realpath: str = os.path.realpath(service_filepath)
         filename: str = os.path.basename(service_filepath)
         service_name, _ = os.path.splitext(filename)
+        self.runner_loop = asyncio.get_event_loop()
         try:
             spec = importlib.util.spec_from_file_location(
                 service_name, service_filepath)
@@ -63,15 +64,17 @@ class ADServiceWrapper:
         return f'{self.name}'
 
     async def broadcast(self, event, packet) -> None:
+        logging.debug(f"Broadcasting to {len(self.clients)} clients")
         for client in self.clients:
             await client.send(event, packet)
 
     def __on_event_callable_wrapper(self, values: dict) -> None:
         logging.debug(f"Service <{self.name}> posting {values}...")
-        self.runner_loop.create_task(self.broadcast("notify_values", {"service": self.name, "values": values}))
+        task = self.runner_loop.create_task(self.broadcast("notify_values", {"service": self.name, "values": values}))
+        self.runner_loop.run_until_complete(task)
         logging.debug(f"Service <{self.name}> posted {values}")
 
-    async def subscribe(self, client) -> bool:
+    def subscribe(self, client) -> bool:
         if client not in self.clients:
             if len(self.clients) == 0:
                 logging.info(f"Setting up service <{self.name}>")
@@ -83,17 +86,17 @@ class ADServiceWrapper:
                     logging.critical(f'Could not setup service <{self.name}>')
                     return False
             self.clients.append(client)
-            await client.subscribe(self)
+            client.subscribe(self)
             return True
         else:
             logging.warning(
                 f"{client} is already subscribed to service <{self.name}>")
             return False
 
-    async def unsubscribe(self, client) -> bool:
+    def unsubscribe(self, client) -> bool:
         try:
             self.clients.remove(client)
-            await client.unsubscribe(self)
+            client.unsubscribe(self)
             if len(self.clients) == 0:
                 logging.info(f"Cleaning up service <{self.name}>")
                 self.service.cleanup()

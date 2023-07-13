@@ -34,7 +34,7 @@ class ADServiceScheduler:
                 f"Client {client} tried to subscribe to non existing service {service_name}")
             return False
         logging.debug(f"{client} subscribing to <{service_name}> ...")
-        if not await self.services[service_name].subscribe(client):
+        if not self.services[service_name].subscribe(client):
             return False
         else:
             logging.info(f"{client} subscribed to <{service_name}>")
@@ -46,7 +46,7 @@ class ADServiceScheduler:
                 f"Client {client} tried to unsubscribe to non existing service {service_name}")
             return False
         logging.debug(f"{client} unsubscribing from <{service_name}> ...")
-        if not await self.services[service_name].unsubscribe(client):
+        if not self.services[service_name].unsubscribe(client):
             return False
         else:
             logging.info(f"{client} unsubscribed from <{service_name}>")

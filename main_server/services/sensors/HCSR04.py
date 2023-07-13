@@ -14,6 +14,9 @@ class HCSR04:
     https://raspberry-lab.fr/Composants/Mesure-de-distance-avec-HC-SR04-Raspberry-Francais/Images/Schema-Branchement-Raspberry-Model.3-HC-SR04.png
     """
 
+    MAX_TICK_TO_STALL: int = 1000
+    """Max number of loop iteration before stating that the sensor stalled"""
+
     MAX_RANGE_HANDLED_METER: float = 4.0
     """Max range handled by the sensor in meter"""
 
@@ -51,8 +54,8 @@ class HCSR04:
         while GPIO.input(self.echo_pin) == 0 and self.iscancel == False:
             """Wait for the ultrasound to be sent"""
             counter += 1
-            if counter > 1000:
-                logging.warning("HCS-04 sensor stalled")
+            if counter > MAX_TICK_TO_STALL:
+                logging.warning("HCSR-04 sensor stalled")
                 return self.getDistanceInMeter()
 
         start_time: float = time.time()
@@ -62,8 +65,8 @@ class HCSR04:
         while GPIO.input(self.echo_pin) == 1 and self.iscancel == False:
             """Wait for the ultrasound to be received"""
             counter += 1
-            if counter > 1000:
-                logging.warning("HCS-04 sensor stalled")
+            if counter > MAX_TICK_TO_STALL:
+                logging.warning("HCSR-04 sensor stalled")
                 return self.getDistanceInMeter()
 
         stop_time: float = time.time()

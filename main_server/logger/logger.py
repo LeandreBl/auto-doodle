@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 
+LOG_FORMAT: str = '[%(levelname)-8s] [%(asctime)s] [#%(threadName)-8s] [%(filename)s:%(lineno)d] -- %(message)s'
 
 def setupLogger(loglevel: str, logfilename: str) -> bool:
     LOG_LEVELS = {
@@ -27,14 +28,12 @@ def setupLogger(loglevel: str, logfilename: str) -> bool:
     if not os.path.exists(log_directory):
         os.makedirs(os.path.dirname(logfilename))
 
-    log_format: str = '[%(levelname)-8s] [%(asctime)s] [#%(threadName)-8s] [%(filename)s:%(lineno)d] -- %(message)s'
-
     logging.basicConfig(
-        format=log_format,
+        format=LOG_FORMAT,
         level=loglevel,
         handlers=[
             logging.FileHandler(logfilename, 'a'),
             logging.StreamHandler()
-        ]
+        ],
     )
     return True
