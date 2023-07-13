@@ -6,7 +6,6 @@ import time
 
 import GPIO
 
-
 class HCSR04:
     """
     HCSR04 ultrasound sensor
@@ -33,7 +32,8 @@ class HCSR04:
         GPIO.output(self.trigger_pin, False)
 
     def cleanup(self) -> None:
-        GPIO.cleanup([self.trigger_pin, self.echo_pin])
+        GPIO.cleanup(self.trigger_pin)
+        GPIO.cleanup(self.echo_pin)
 
     def getDistanceInMeter(self) -> float:
         GPIO.output(self.trigger_pin, True)
@@ -45,16 +45,24 @@ class HCSR04:
         GPIO.output(self.trigger_pin, False)
         """Put low state in the trigger GPIO"""
 
+        counter = 0
         while GPIO.input(self.echo_pin) == 0 and self.iscancel == False:
             """Wait for the ultrasound to be sent"""
-            pass
+            counter += 1
+            if counter > 1000:
+                print("stall");
+                return self.getDistanceInMeter()
 
         start_time: float = time.time()
         """Get the exact time when we sent the ultrasound"""
 
+        counter = 0
         while GPIO.input(self.echo_pin) == 1 and self.iscancel == False:
             """Wait for the ultrasound to be received"""
-            pass
+            counter += 1
+            if counter > 1000:
+                print("stall");
+                return self.getDistanceInMeter()
 
         stop_time: float = time.time()
         """Get the exact time when we received the ultrasound"""
