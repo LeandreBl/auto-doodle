@@ -6,6 +6,8 @@ import time
 
 import GPIO
 
+from logger.logger import logging
+
 class HCSR04:
     """
     HCSR04 ultrasound sensor
@@ -50,7 +52,7 @@ class HCSR04:
             """Wait for the ultrasound to be sent"""
             counter += 1
             if counter > 1000:
-                print("stall");
+                logging.warning("HCS-04 sensor stalled")
                 return self.getDistanceInMeter()
 
         start_time: float = time.time()
@@ -61,7 +63,7 @@ class HCSR04:
             """Wait for the ultrasound to be received"""
             counter += 1
             if counter > 1000:
-                print("stall");
+                logging.warning("HCS-04 sensor stalled")
                 return self.getDistanceInMeter()
 
         stop_time: float = time.time()

@@ -2,3 +2,5 @@ websockets
 GPIO
 mpu6050-raspberrypi
 smbus
+uvicorn
+python-socketio

@@ -8,11 +8,11 @@ from ad_types.configuration import ADConfiguration
 
 import threading
 
+from services.sensors.HCSR04 import HCSR04
+
 from logger.logger import logging
 
 import time
-
-from hcsr04sensor.sensor import Measurement as HCSR04
 
 TRIGGER_GPIO_PIN: int = 17
 """Trigger GPIO pin"""
@@ -26,7 +26,7 @@ class Service:
     """
 
     def __init__(self) -> None:
-        self.sensor: HCSR04 = HCSR04(trig_pin=TRIGGER_GPIO_PIN, echo_pin=ECHO_GPIO_PIN)
+        self.sensor: HCSR04 = HCSR04(TRIGGER_GPIO_PIN, ECHO_GPIO_PIN)
 
     def worker(self):
         """
@@ -35,12 +35,12 @@ class Service:
         """
         self.running = True
         while self.running:
-            distance_in_meter: float = self.sensor.raw_distance()
+            distance_in_meter: float = self.sensor.getDistanceInMeter()
             """Get the distance from the sensor"""
 
             self.notify({"distance": distance_in_meter, "unit": "m"})
             """Send the sensor values to the subscribed clients"""
-            time.sleep(0.5)
+            time.sleep(0.3)
 
     def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None], log_file: TextIO) -> None:
         """

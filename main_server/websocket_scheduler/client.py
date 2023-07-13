@@ -8,9 +8,9 @@ from service_scheduler.service import ADServiceWrapper
 
 
 class ADClient:
-    def __init__(self, websocket) -> None:
-        print(type(websocket))
-        self.websocket = websocket
+    def __init__(self, sid: str, server) -> None:
+        self.server = server
+        self.sid = sid
         self.subscribed_services: list[ADServiceWrapper] = []
         self.connected = True
         self.username = "anonymous"
@@ -19,7 +19,7 @@ class ADClient:
         self.close()
 
     def __repr__(self) -> str:
-        return f'{self.username}@{self.websocket.host}:{self.websocket.port}'
+        return f'{self.username}@{self.sid}'
 
     async def unsubscribe(self, service: ADServiceWrapper) -> bool:
         try:
@@ -43,7 +43,6 @@ class ADClient:
         if self.connected == True:
             self.connected = False
             await self.unsubscribe_all()
-            await self.websocket.close()
 
     async def send(self, event, packet) -> None:
-        await self.websocket.emit(event, packet)
+        await self.server.emit(event, packet, to=self.sid)

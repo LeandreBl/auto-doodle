@@ -23,7 +23,7 @@ class WebsocketScheduler:
 
         self.app = socketio.ASGIApp(self.server)
 
-        self.clients: list[ADClient] = []
+        self.clients: dict[str, ADClient] = {}
 
         self.service_scheduler: ADServiceScheduler = ADServiceScheduler(
             configuration)
@@ -33,48 +33,54 @@ class WebsocketScheduler:
         logging.info(
             f"Scheduler started with {self.service_scheduler} service(s)")
 
+    def client_from_sid(self, sid: str) -> ADClient:
+        return self.clients[sid]
+
     def register_callbacks(self):
         @self.server.event
         async def connect(sid, environ):
-            client: ADClient = ADClient(sid)
-            self.clients.append(client)
-            setattr(sid, "client", client)
+            client: ADClient = ADClient(sid, self.server)
+            self.clients[sid] = client
 
         @self.server.event
-        def disconnect(sid):
-            # pop from list
-            # client.close()
-            pass
+        async def disconnect(sid):
+            client: ADClient = self.client_from_sid(sid)
+            await client.close()
+            self.clients.pop(sid)
 
         @self.server.event
         async def set_username(sid, data) -> None:
+            client: ADClient = self.client_from_sid(sid)
             try:
                 username: str = data["username"]
-                sid.client.username = username
-                await sid.client.send('set_username', {"message": f"username changed to '{username}'"})
+                client.username = username
+                await client.send('set_username', {"message": f"username changed to '{username}'"})
             except:
-                await sid.client.send('set_username', {"error": "missing field 'username'"})
+                await client.send('set_username', {"error": "missing field 'username'"})
 
         @self.server.event
         async def get_subscriptions(sid, data) -> None:
-            await sid.client.send('get_subscriptions', {"subscriptions": [service.name for service in sid.client.subscribed_services]})
+            client: ADClient = self.client_from_sid(sid)
+            await client.send('get_subscriptions', {"subscriptions": [service.name for service in client.subscribed_services]})
 
         @self.server.event
         async def subscribe(sid, data) -> None:
+            client: ADClient = self.client_from_sid(sid)
             if not "service_name" in data:
                 logging.warning(
                     f"client {sid.client} missing \"service_name\" key in subscribe packet")
-                await sid.client.send("subscribe", {"error": f"missing \"service_name\" key in packet"})
+                await client.send("subscribe", {"error": f"missing \"service_name\" key in packet"})
                 return
 
             service_name: str = data["service_name"]
-            if not await self.service_scheduler.subscribe(service_name, sid.client):
-                await sid.client.send("subscribe", {"error": f"fail to subscribe to service {service_name}"})
+            if not await self.service_scheduler.subscribe(service_name, client):
+                await client.send("subscribe", {"error": f"fail to subscribe to service {service_name}"})
             else:
-                await sid.client.send("subscribe", {"message": f"successfully subscribed to service {service_name}"})
+                await client.send("subscribe", {"message": f"successfully subscribed to service {service_name}"})
 
         @self.server.event
         async def on_unsubscribe(sid, data) -> None:
+            client: ADClient = self.client_from_sid(sid)
             if not "service_name" in data:
                 logging.warning(
                     f"client {sid.client} missing \"service_name\" key in subscribe packet")
@@ -82,10 +88,10 @@ class WebsocketScheduler:
                 return
 
             service_name: str = data["service_name"]
-            if not await self.service_scheduler.unsubscribe(service_name, sid.client):
-                await sid.client.send("subscribe", {"error": f"failed to unsubscribed from service {service_name}"})
+            if not await self.service_scheduler.unsubscribe(service_name, client):
+                await client.send("subscribe", {"error": f"failed to unsubscribed from service {service_name}"})
             else:
-                await sid.client.send("subscribe", {"message": f"successfully unsubscribed from service {service_name}"})
+                await client.send("subscribe", {"message": f"successfully unsubscribed from service {service_name}"})
 
     def start(self) -> None:
         logging.info("Websocket scheduler started")
