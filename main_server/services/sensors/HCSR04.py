@@ -22,6 +22,10 @@ class HCSR04:
     def __init__(self, trigger_pin: int, echo_pin: int) -> None:
         self.trigger_pin: int = trigger_pin
         self.echo_pin: int = echo_pin
+        self.iscancel: bool = False
+
+    def cancel(self) -> None:
+        self.iscancel = True
 
     def setup(self) -> None:
         GPIO.setup(self.trigger_pin, GPIO.OUT)
@@ -41,14 +45,14 @@ class HCSR04:
         GPIO.output(self.trigger_pin, False)
         """Put low state in the trigger GPIO"""
 
-        while GPIO.input(self.echo_pin) == 0:
+        while GPIO.input(self.echo_pin) == 0 and self.iscancel == False:
             """Wait for the ultrasound to be sent"""
             pass
 
         start_time: float = time.time()
         """Get the exact time when we sent the ultrasound"""
 
-        while GPIO.input(self.echo_pin) == 1:
+        while GPIO.input(self.echo_pin) == 1 and self.iscancel == False:
             """Wait for the ultrasound to be received"""
             pass
 

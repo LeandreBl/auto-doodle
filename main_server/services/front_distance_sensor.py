@@ -10,6 +10,8 @@ import threading
 
 from services.sensors.HCSR04 import HCSR04
 
+import time
+
 TRIGGER_GPIO_PIN: int = 23
 """Trigger GPIO pin"""
 
@@ -36,6 +38,7 @@ class Service:
 
             self.notify({"distance": distance_in_meter, "unit": "m"})
             """Send the sensor values to the subscribed clients"""
+            time.sleep(0.3)
 
     def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None], log_file: TextIO) -> None:
         """
@@ -44,9 +47,9 @@ class Service:
         """
 
         self.sensor.setup()
-
+        self.logfile = log_file
         self.notify = callable_async_get
-        self.thread = threading.Thread(target=self.loop)
+        self.thread = threading.Thread(target=self.worker)
         self.thread.start()
         return True
 
@@ -54,6 +57,7 @@ class Service:
         """
         Function called when the service is unloaded
         """
+        self.sensor.cancel()
         self.running = False
         self.thread.join()
         self.sensor.cleanup()

@@ -14,7 +14,6 @@ from websocket_scheduler.websocket_scheduler import WebsocketScheduler
 
 VERSION: float = 0.1
 
-
 def main(argv: list[str]) -> int:
     main_ad_configuration: ADConfiguration = ADConfiguration()
     parser = argparse.ArgumentParser(
