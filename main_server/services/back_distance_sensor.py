@@ -10,6 +10,8 @@ import threading
 
 from services.sensors.HCSR04 import HCSR04
 
+from logger.logger import logging
+
 import time
 
 TRIGGER_GPIO_PIN: int = 17
@@ -38,7 +40,7 @@ class Service:
 
             self.notify({"distance": distance_in_meter, "unit": "m"})
             """Send the sensor values to the subscribed clients"""
-            time.sleep(0.3)
+            time.sleep(0.5)
 
     def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None], log_file: TextIO) -> None:
         """
