@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import websockets
+import socketio
 
-from logger.logger import logging
-from ad_types.packets import ADPacket
 from service_scheduler.service import ADServiceWrapper
 
 
 class ADClient:
     def __init__(self, websocket) -> None:
+        print(type(websocket))
         self.websocket = websocket
         self.subscribed_services: list[ADServiceWrapper] = []
         self.connected = True
@@ -46,29 +45,5 @@ class ADClient:
             await self.unsubscribe_all()
             await self.websocket.close()
 
-    async def receive(self) -> ADPacket:
-        try:
-            frame = await self.websocket.recv()
-        except websockets.exceptions.ConnectionClosed:
-            await self.close()
-            return None
-        except websockets.exceptions.ConnectionClosedOK:
-            await self.close()
-            return None
-        try:
-            return ADPacket(frame)
-        except Exception as e:
-            logging.warning(f"Invalid ADPacket format: {frame} ({e})")
-            await self.close()
-            return None
-
-    async def send(self, packet: ADPacket) -> None:
-        try:
-            await self.websocket.send(str(packet))
-            await self.websocket.drain()
-        except websockets.exceptions.ConnectionClosed:
-            await self.close()
-            return None
-        except websockets.exceptions.ConnectionClosedOK:
-            await self.close()
-            return None
+    async def send(self, event, packet) -> None:
+        await self.websocket.emit(event, packet)

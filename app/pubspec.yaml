@@ -38,9 +38,12 @@ dependencies:
   provider: ^6.0.5
   shared_preferences: ^2.2.0
   sensors_plus: ^3.0.2
-  web_socket_channel: ^2.4.0
-  video_player: ^2.7.0
   floating: ^2.0.1
+  fluttertoast: ^8.2.2
+  google_fonts: ^5.1.0
+  camera: ^0.10.5+2
+  logger: ^1.4.0
+  socket_io_client: ^2.0.2
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +61,12 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: res/fonts/Roboto/Roboto-Regular.ttf
+        - asset: res/fonts/Roboto/Roboto-Bold.ttf
+          weight: 700
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

@@ -1,7 +1,9 @@
-import 'package:floating/floating.dart';
+import 'package:auto_doodle/models/global.dart';
+import 'package:auto_doodle/screens/cameraSensors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:video_player/video_player.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +17,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'AutoDoodle',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -35,61 +37,36 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: Home(),
+      home: App(),
     );
   }
 }
 
-class Home extends StatefulWidget {
-  @override
-  _HomeState createState() => _HomeState();
-}
-
-class _HomeState extends State<Home> {
-  late VideoPlayerController controller;
-  final Floating floating = Floating();
-
-  @override
-  void initState() {
-    loadVideoPlayer();
-    super.initState();
-  }
-
-  void loadVideoPlayer() {
-    controller = VideoPlayerController.networkUrl(
-      Uri.https('www.fluttercampus.com', '/video.mp4'),
-    );
-    controller.addListener(() {
-      setState(() {});
-    });
-    controller.initialize().then((value) {
-      setState(() {
-        controller.play();
-        controller.setLooping(true);
-      });
-    });
-  }
-
+class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          SystemNavigator.pop(animated: true);
-        },
-        child: Icon(Icons.exit_to_app),
-      ),
-      body: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-        return Container(
-          child: Column(children: [
-            AspectRatio(
-              aspectRatio: controller.value.aspectRatio,
-              child: VideoPlayer(controller),
-            ),
-          ]),
-        );
-      }),
+    return MultiProvider(
+      providers: <ChangeNotifierProvider<dynamic>>[
+        ChangeNotifierProvider<Global>(create: (_) => Global())
+      ],
+      child: MaterialApp(
+          title: "AutoDoodle",
+          builder: (BuildContext context, Widget? child) {
+            return SafeArea(
+              child: child ?? const Text("No child widget"),
+            );
+          },
+          theme: ThemeData(
+              primarySwatch: Colors.blue,
+              visualDensity: VisualDensity.adaptivePlatformDensity,
+              fontFamily: 'Roboto',
+              textTheme: GoogleFonts.robotoTextTheme(
+                Theme.of(context).textTheme,
+              )),
+          initialRoute: CameraSensors.route,
+          routes: <String, Widget Function(BuildContext)>{
+            CameraSensors.route: (BuildContext _) => CameraSensors()
+          }),
     );
   }
 }

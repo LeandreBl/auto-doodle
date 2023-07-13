@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
-
 from ad_types.configuration import ADConfiguration
-from ad_types.packets import ADPacket
 from utils.utils import get_matching_filenames_in_directory
 from logger.logger import logging
 from .service import ADServiceWrapper

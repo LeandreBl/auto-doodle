@@ -10,7 +10,6 @@ from typing import Callable, TextIO
 import datetime
 
 from ad_types.configuration import ADConfiguration
-from ad_types.packets import ADPacket
 
 from logger.logger import logging
 
@@ -53,7 +52,6 @@ class ADServiceWrapper:
         except Exception as e:
             self.service = None
             logging.critical(f"Failed to load <{service_name}> service at \"{realpath}\" ({e})")
-        self.runner_loop = asyncio.get_event_loop()
         self.name: str = service_name
         self.clients = []
 
@@ -64,14 +62,13 @@ class ADServiceWrapper:
     def __repr__(self) -> str:
         return f'{self.name}'
 
-    async def broadcast(self, packet: ADPacket) -> None:
+    async def broadcast(self, event, packet) -> None:
         for client in self.clients:
-            await client.send(packet)
+            await client.send(event, packet)
 
     def __on_event_callable_wrapper(self, values: dict) -> None:
         logging.debug(f"Service <{self.name}> posting {values}...")
-        task = self.runner_loop.create_task(self.broadcast(
-            ADPacket("notify_values", service=self.name, values=values)))
+        self.runner_loop.create_task(self.broadcast("notify_values", {"service": self.name, "values": values}))
         logging.debug(f"Service <{self.name}> posted {values}")
 
     async def subscribe(self, client) -> bool:

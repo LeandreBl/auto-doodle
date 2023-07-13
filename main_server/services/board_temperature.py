@@ -20,10 +20,7 @@ class Service:
         self.running = True
         while self.running:
             try:
-                with open(TEMPERATURE_SYSFILE, 'r') as sysfile:
-                    ascii_temp: str = sysfile.readline()
-                    temp: float = float(ascii_temp) / 1000.0
-                    self.callable({"temperature": temp, "unit": "°C"})
+                self.callable({"temperature": 16, "unit": "°C"})
             except Exception as e:
                 logging.critical(f"Failed to retrieve temperature from {TEMPERATURE_SYSFILE}: {e}")
             time.sleep(1)
