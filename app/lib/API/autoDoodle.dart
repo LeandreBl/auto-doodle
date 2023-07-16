@@ -9,7 +9,7 @@ class AutoDoodleAPI {
 
   AutoDoodleAPI({String this.uri = 'ws://$DEFAULT_URL:$DEFAULT_PORT'}) {}
 
-  void connect({void Function()? onConnect, void Function()? onDisconnect}) {
+  void connect({void Function()? onConnect, void Function()? onDisconnect, void Function()? onError}) {
     ws = IO.io(
         uri,
         IO.OptionBuilder()
@@ -23,6 +23,11 @@ class AutoDoodleAPI {
     ws.onDisconnect((_) {
       if (onDisconnect != null) {
         onDisconnect();
+      }
+    });
+    ws.onError((_) {
+      if (onError != null) {
+        onError();
       }
     });
   }

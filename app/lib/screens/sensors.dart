@@ -1,47 +1,45 @@
-import 'package:auto_doodle/API/autoDoodle.dart';
-import 'package:auto_doodle/API/logging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-class BackSensor extends StatefulWidget {
-  const BackSensor({super.key});
-
-  @override
-  State<BackSensor> createState() => _BackSensorState();
-}
-
-class _BackSensorState extends State<BackSensor> {
-  double? distance = null;
-  AutoDoodleAPI api = AutoDoodleAPI();
-
-  @override
-  void initState() {
-    super.initState();
-    api.connect(onConnect: () {
-      api.subscribe("back_distance_sensor");
-    });
-    api.on("notify_values", (dynamic data) {
-      if (data["service"] == "back_distance_sensor") {
-        setState(() {
-          distance = data["values"]["distance"] as double;
-        });
-        Logging.debug("$distance");
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    api.dispose();
-    super.dispose();
-  }
+class Sensor extends StatelessWidget {
+  final double? value;
+  final String name;
+  final Icon icon;
+  final String unit;
+  const Sensor(this.name, this.icon, this.value, this.unit, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    switch (distance) {
-      case null:
-        return Text("loading...");
-      default:
-        return Text("$distance m");
-    }
+    return Container(
+      width: 130.0,
+      height: 130.0,
+      child: Card(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(color: Colors.black, fontSize: 20),
+                ),
+                icon,
+              ],
+            ),
+            (value == null)
+                ? SpinKitSpinningLines(
+                    color: Colors.blue,
+                    size: 50.0,
+                  )
+                : Text(
+                    "${value!.toStringAsFixed(2)} $unit",
+                    style: TextStyle(color: Colors.black, fontSize: 20),
+                  ),
+          ],
+        ),
+      ),
+    );
   }
 }

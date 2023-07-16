@@ -2,6 +2,7 @@ import 'package:auto_doodle/API/toaster.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 enum CameraState { loading, not_found, found, error }
 
@@ -51,9 +52,15 @@ class _CameraState extends State<Camera> {
   @override
   Widget build(BuildContext context) {
     return switch (state) {
-      CameraState.loading => const Text("Loading ..."),
-      CameraState.not_found => const Text("No camera found"),
-      CameraState.error => const Text("Error"),
+      CameraState.loading => const SpinKitSpinningLines(color: Colors.blue),
+      CameraState.not_found => const Text(
+          "No camera found",
+          style: TextStyle(color: Colors.yellow),
+        ),
+      CameraState.error => const Text(
+          "Error",
+          style: TextStyle(color: Colors.red),
+        ),
       CameraState.found => CameraPreview(controller),
     };
   }
