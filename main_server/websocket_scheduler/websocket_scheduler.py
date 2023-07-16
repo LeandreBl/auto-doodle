@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import uvicorn
 import socketio
+import asyncio
 
 from ad_types.configuration import ADConfiguration
 
-from logger.logger import logging
+from logger.logger import logging, LOG_FORMAT
 
 from .client import ADClient
 from service_scheduler.service_scheduler import ADServiceScheduler
@@ -43,9 +44,9 @@ class WebsocketScheduler:
             self.clients[sid] = client
 
         @self.server.event
-        async def disconnect(sid):
+        def disconnect(sid):
             client: ADClient = self.client_from_sid(sid)
-            await client.close()
+            client.close()
             self.clients.pop(sid)
 
         @self.server.event
@@ -97,12 +98,11 @@ class WebsocketScheduler:
         logging.info("Websocket scheduler started")
         self.register_callbacks()
         try:
-            uvicorn.run(self.app, host="127.0.0.1", port=self.configuration.websocket_scheduler_port, log_level=self.configuration.logging_level.lower(), ws="websockets")
+            log_config = uvicorn.config.LOGGING_CONFIG
+            log_config["formatters"]["access"]["fmt"] = LOG_FORMAT
+            log_config["formatters"]["default"]["fmt"] = LOG_FORMAT
+            uvicorn.run(self.app, host="127.0.0.1", port=self.configuration.websocket_scheduler_port, log_level=self.configuration.logging_level.lower(), ws="websockets", log_config=log_config)
         except Exception as e:
             logging.warning(f"Application stopped: {e}")
         logging.info("Websocket scheduler stopped")
         self.service_scheduler.stop()
-
-    def stop(self) -> None:
-        self.service_scheduler.stop()
-        exit(1)

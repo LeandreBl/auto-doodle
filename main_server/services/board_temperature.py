@@ -20,9 +20,11 @@ class Service:
         self.running = True
         while self.running:
             try:
-                self.callable({"temperature": 16, "unit": "°C"})
+                with open(TEMPERATURE_SYSFILE, "r") as file:
+                    line: str = file.readline()
+                    self.callable({"value": float(line) / 1000, "unit": "°C"})
             except Exception as e:
-                logging.critical(f"Failed to retrieve temperature from {TEMPERATURE_SYSFILE}: {e}")
+                logging.warning(f"Failed to retrieve temperature from {TEMPERATURE_SYSFILE}: {e}")
             time.sleep(1)
 
     def setup(self, configuration: ADConfiguration, callable_async_get: Callable[[dict], None], log_file: TextIO) -> bool:

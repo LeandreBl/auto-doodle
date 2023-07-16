@@ -14,6 +14,12 @@ class HCSR04:
     https://raspberry-lab.fr/Composants/Mesure-de-distance-avec-HC-SR04-Raspberry-Francais/Images/Schema-Branchement-Raspberry-Model.3-HC-SR04.png
     """
 
+    MAX_SENSOR_FAILURE_FOR_RESET: int = 10
+    """Max number of iterations before stating that the sensor needs to be reset"""
+
+    MAX_TICK_TO_STALL: int = 1000
+    """Max number of loop iteration before stating that the sensor stalled"""
+
     MAX_RANGE_HANDLED_METER: float = 4.0
     """Max range handled by the sensor in meter"""
 
@@ -24,6 +30,7 @@ class HCSR04:
         self.trigger_pin: int = trigger_pin
         self.echo_pin: int = echo_pin
         self.iscancel: bool = False
+        self.sensor_failure: int = 0
 
     def cancel(self) -> None:
         self.iscancel = True
@@ -51,8 +58,8 @@ class HCSR04:
         while GPIO.input(self.echo_pin) == 0 and self.iscancel == False:
             """Wait for the ultrasound to be sent"""
             counter += 1
-            if counter > 1000:
-                logging.warning("HCS-04 sensor stalled")
+            if counter > self.MAX_TICK_TO_STALL:
+                logging.warning("HCSR-04 sensor stalled")
                 return self.getDistanceInMeter()
 
         start_time: float = time.time()
@@ -62,8 +69,8 @@ class HCSR04:
         while GPIO.input(self.echo_pin) == 1 and self.iscancel == False:
             """Wait for the ultrasound to be received"""
             counter += 1
-            if counter > 1000:
-                logging.warning("HCS-04 sensor stalled")
+            if counter > self.MAX_TICK_TO_STALL:
+                logging.warning("HCSR-04 sensor stalled")
                 return self.getDistanceInMeter()
 
         stop_time: float = time.time()
@@ -74,6 +81,19 @@ class HCSR04:
 
         distance_meter: float = (
             elapsed_seconds * self.SOUND_SPEED_IN_AIR_METER_PER_SECOND) / 2.0
+
+        if distance_meter < 0.02:
+            self.sensor_failure += 1
+            if self.sensor_failure > self.MAX_SENSOR_FAILURE_FOR_RESET:
+                self.cleanup()
+                time.sleep(0.5)
+                self.setup()
+                time.sleep(0.5)
+                logging.warning("HCSR04 sensor failed, reseting...")
+                return self.getDistanceInMeter()
+        else:
+            self.sensor_failure = 0
+
         """
         Compute the distance travelled by the sound
         Multiply the speed of the sound (m/s) by the elapsed time (s)

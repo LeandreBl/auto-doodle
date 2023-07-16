@@ -10,6 +10,8 @@ import threading
 
 from services.sensors.HCSR04 import HCSR04
 
+from logger.logger import logging
+
 import time
 
 TRIGGER_GPIO_PIN: int = 23
@@ -25,6 +27,7 @@ class Service:
 
     def __init__(self) -> None:
         self.sensor: HCSR04 = HCSR04(TRIGGER_GPIO_PIN, ECHO_GPIO_PIN)
+        self.sensor_failure: int = 0
 
     def worker(self):
         """
@@ -36,7 +39,7 @@ class Service:
             distance_in_meter: float = self.sensor.getDistanceInMeter()
             """Get the distance from the sensor"""
 
-            self.notify({"distance": distance_in_meter, "unit": "m"})
+            self.notify({"value": distance_in_meter, "unit": "m"})
             """Send the sensor values to the subscribed clients"""
             time.sleep(0.3)
 
